@@ -40,10 +40,21 @@ function App() {
       console.error(error);
     }
   };
-
-  const deleteTask = (id) => {
-    const updatedTasks = tasks.filter((task) => task.id !== id);
-    setTasks(updatedTasks);
+  const deleteTask = async (id) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/tasks/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
+  
+      if (response.ok) {
+        setTasks(tasks.filter((task) => task._id !== id));
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (

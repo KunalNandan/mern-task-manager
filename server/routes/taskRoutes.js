@@ -4,7 +4,10 @@ const router = express.Router();
 const {
   getTasks,
   createTask,
+  deleteTask,
 } = require("../controllers/taskController");
+
+router.delete("/:id", deleteTask);
 
 // GET all tasks
 router.get("/", getTasks);
