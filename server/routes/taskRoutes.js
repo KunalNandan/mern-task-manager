@@ -5,9 +5,12 @@ const {
   getTasks,
   createTask,
   deleteTask,
+  updateTask,
 } = require("../controllers/taskController");
 
 router.delete("/:id", deleteTask);
+
+router.patch("/:id", updateTask);
 
 // GET all tasks
 router.get("/", getTasks);

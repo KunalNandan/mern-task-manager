@@ -45,8 +45,34 @@ const deleteTask = async (req, res) => {
     });
   }
 };
+
+// UPDATE task completion
+const updateTask = async (req, res) => {
+  try {
+    const updatedTask = await Task.findByIdAndUpdate(
+      req.params.id,
+      {
+        completed: req.body.completed,
+      },
+      { new: true }
+    );
+
+    if (!updatedTask) {
+      return res.status(404).json({
+        message: "Task not found",
+      });
+    }
+
+    res.json(updatedTask);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
 module.exports = {
   getTasks,
   createTask,
   deleteTask,
+  updateTask,
 };
