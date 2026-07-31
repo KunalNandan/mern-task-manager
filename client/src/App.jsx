@@ -14,13 +14,13 @@ function App() {
         console.error(error);
       }
     };
-  
+
     fetchTasks();
   }, []);
 
   const addTask = async () => {
     if (newTask.trim() === "") return;
-  
+
     try {
       const response = await fetch("http://localhost:5000/api/tasks", {
         method: "POST",
@@ -31,9 +31,9 @@ function App() {
           title: newTask,
         }),
       });
-  
+
       const savedTask = await response.json();
-  
+
       setTasks([...tasks, savedTask]);
       setNewTask("");
     } catch (error) {
@@ -48,10 +48,37 @@ function App() {
           method: "DELETE",
         }
       );
-  
+
       if (response.ok) {
         setTasks(tasks.filter((task) => task._id !== id));
       }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const toggleComplete = async (id, currentStatus) => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/tasks/${id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            completed: !currentStatus,
+          }),
+        }
+      );
+
+      const updatedTask = await response.json();
+
+      setTasks(
+        tasks.map((task) =>
+          task._id === id ? updatedTask : task
+        )
+      );
     } catch (error) {
       console.error(error);
     }
@@ -74,7 +101,7 @@ function App() {
 
       {tasks.map((task) => (
         <div
-        key={task._id}
+          key={task._id}
           style={{
             border: "1px solid gray",
             padding: "10px",
@@ -85,13 +112,21 @@ function App() {
           <p>
             Status: {task.completed ? "✅ Completed" : "❌ Pending"}
           </p>
-          <button onClick={() =>deleteTask(task._id)}>
+          <button
+            onClick={() => toggleComplete(task._id, task.completed)}
+          >
+            {task.completed ? "Mark Pending" : "Mark Complete"}
+          </button>
+          <button onClick={() => deleteTask(task._id)}>
             Delete
           </button>
         </div>
       ))}
     </div>
   );
+
 }
+
+
 
 export default App;
