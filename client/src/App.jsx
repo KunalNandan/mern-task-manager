@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 function App() {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -40,6 +41,8 @@ function App() {
       console.error(error);
     }
   };
+
+
   const deleteTask = async (id) => {
     try {
       const response = await fetch(
@@ -82,7 +85,12 @@ function App() {
     } catch (error) {
       console.error(error);
     }
+
+
   };
+  const filteredTasks = tasks.filter((task) =>
+    task.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex justify-center p-10">
@@ -115,14 +123,20 @@ function App() {
           </button>
         </div>
 
-        {tasks.map((task) => (
+        <div className="mt-4">
+          <input
+            type="text"
+            placeholder="🔍 Search tasks..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        {filteredTasks.map((task) => (
           <div
             key={task._id}
-            style={{
-              border: "1px solid gray",
-              padding: "10px",
-              margin: "10px",
-            }}
+            className="bg-gray-50 border rounded-xl p-4 shadow-sm hover:shadow-md transition mt-4 flex justify-between items-center"
           >
             <h3>{task.title}</h3>
 
