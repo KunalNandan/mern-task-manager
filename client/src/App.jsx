@@ -85,43 +85,63 @@ function App() {
   };
 
   return (
-    <div style={{ padding: "30px" }}>
-      <h1>Task Manager</h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex justify-center p-10">
+      <div className="w-full max-w-3xl bg-white rounded-xl shadow-lg p-6">
+        <div className="text-center mb-8">
+          <div className="text-6xl mb-3">📋</div>
 
-      <input
-        type="text"
-        placeholder="Enter task..."
-        value={newTask}
-        onChange={(e) => setNewTask(e.target.value)}
-      />
+          <h1 className="text-4xl font-extrabold text-gray-800">
+            Task Manager
+          </h1>
 
-      <button onClick={addTask}>Add</button>
-
-      <hr />
-
-      {tasks.map((task) => (
-        <div
-          key={task._id}
-          style={{
-            border: "1px solid gray",
-            padding: "10px",
-            margin: "10px",
-          }}
-        >
-          <h3>{task.title}</h3>
-          <p>
-            Status: {task.completed ? "✅ Completed" : "❌ Pending"}
+          <p className="text-gray-500 mt-2">
+            Stay organized. Stay productive.
           </p>
+        </div>
+
+        <div className="flex gap-3 mt-6">
+          <input
+            type="text"
+            placeholder="Enter a task..."
+            value={newTask}
+            onChange={(e) => setNewTask(e.target.value)}
+            className="flex-1 border border-gray-300 rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
           <button
-            onClick={() => toggleComplete(task._id, task.completed)}
+            onClick={addTask}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-7 py-3 rounded-lg transition duration-300 shadow-lg"
           >
-            {task.completed ? "Mark Pending" : "Mark Complete"}
-          </button>
-          <button onClick={() => deleteTask(task._id)}>
-            Delete
+            ➕ Add
           </button>
         </div>
-      ))}
+
+        {tasks.map((task) => (
+          <div
+            key={task._id}
+            style={{
+              border: "1px solid gray",
+              padding: "10px",
+              margin: "10px",
+            }}
+          >
+            <h3>{task.title}</h3>
+
+            <p>
+              Status: {task.completed ? "✅ Completed" : "❌ Pending"}
+            </p>
+
+            <button
+              onClick={() => toggleComplete(task._id, task.completed)}
+            >
+              {task.completed ? "Mark Pending" : "Mark Complete"}
+            </button>
+
+            <button onClick={() => deleteTask(task._id)}>
+              Delete
+            </button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 
