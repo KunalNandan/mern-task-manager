@@ -4,6 +4,7 @@ function App() {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [filter, setFilter] = useState("all");
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -88,9 +89,21 @@ function App() {
 
 
   };
-  const filteredTasks = tasks.filter((task) =>
-    task.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredTasks = tasks.filter((task) => {
+    const matchesSearch = task.title
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+
+    if (filter === "completed") {
+      return matchesSearch && task.completed;
+    }
+
+    if (filter === "pending") {
+      return matchesSearch && !task.completed;
+    }
+
+    return matchesSearch;
+  });
 
   const totalTasks = tasks.length;
 
@@ -120,7 +133,7 @@ function App() {
         <div className="flex gap-3 mt-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
 
-          <div className="bg-blue-100 rounded-xl p-4 text-center shadow hover:scale-105 transition duration-300">
+            <div className="bg-blue-100 rounded-xl p-4 text-center shadow hover:scale-105 transition duration-300">
               <h2 className="text-2xl font-bold text-blue-700">
                 {totalTasks}
               </h2>
@@ -165,6 +178,40 @@ function App() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full border border-gray-300 rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+        </div>
+
+        <div className="flex gap-3 mt-4">
+
+          <button
+            onClick={() => setFilter("all")}
+            className={`px-4 py-2 rounded-lg transition ${filter === "all"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-200 hover:bg-gray-300"
+              }`}
+          >
+            All
+          </button>
+
+          <button
+            onClick={() => setFilter("pending")}
+            className={`px-4 py-2 rounded-lg transition ${filter === "pending"
+              ? "bg-yellow-500 text-white"
+              : "bg-gray-200 hover:bg-gray-300"
+              }`}
+          >
+            Pending
+          </button>
+
+          <button
+            onClick={() => setFilter("completed")}
+            className={`px-4 py-2 rounded-lg transition ${filter === "completed"
+                ? "bg-green-600 text-white"
+                : "bg-gray-200 hover:bg-gray-300"
+              }`}
+          >
+            Completed
+          </button>
+
         </div>
 
         {filteredTasks.map((task) => (
