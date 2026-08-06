@@ -120,21 +120,21 @@ function App() {
         <div className="flex gap-3 mt-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
 
-            <div className="bg-blue-100 rounded-xl p-4 text-center shadow">
+          <div className="bg-blue-100 rounded-xl p-4 text-center shadow hover:scale-105 transition duration-300">
               <h2 className="text-2xl font-bold text-blue-700">
                 {totalTasks}
               </h2>
               <p className="text-gray-700">📋 Total Tasks</p>
             </div>
 
-            <div className="bg-green-100 rounded-xl p-4 text-center shadow">
+            <div className="bg-green-100 rounded-xl p-4 text-center shadow hover:scale-105 transition duration-300">
               <h2 className="text-2xl font-bold text-green-700">
                 {completedTasks}
               </h2>
               <p className="text-gray-700">✅ Completed</p>
             </div>
 
-            <div className="bg-yellow-100 rounded-xl p-4 text-center shadow">
+            <div className="bg-yellow-100 rounded-xl p-4 text-center shadow hover:scale-105 transition duration-300">
               <h2 className="text-2xl font-bold text-yellow-700">
                 {pendingTasks}
               </h2>
