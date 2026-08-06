@@ -92,6 +92,16 @@ function App() {
     task.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const totalTasks = tasks.length;
+
+  const completedTasks = tasks.filter(
+    (task) => task.completed
+  ).length;
+
+  const pendingTasks = tasks.filter(
+    (task) => !task.completed
+  ).length;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex justify-center p-10">
       <div className="w-full max-w-3xl bg-white rounded-xl shadow-lg p-6">
@@ -108,16 +118,40 @@ function App() {
         </div>
 
         <div className="flex gap-3 mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+            <div className="bg-blue-100 rounded-xl p-4 text-center shadow">
+              <h2 className="text-2xl font-bold text-blue-700">
+                {totalTasks}
+              </h2>
+              <p className="text-gray-700">📋 Total Tasks</p>
+            </div>
+
+            <div className="bg-green-100 rounded-xl p-4 text-center shadow">
+              <h2 className="text-2xl font-bold text-green-700">
+                {completedTasks}
+              </h2>
+              <p className="text-gray-700">✅ Completed</p>
+            </div>
+
+            <div className="bg-yellow-100 rounded-xl p-4 text-center shadow">
+              <h2 className="text-2xl font-bold text-yellow-700">
+                {pendingTasks}
+              </h2>
+              <p className="text-gray-700">⏳ Pending</p>
+            </div>
+
+          </div>
           <input
             type="text"
             placeholder="Enter a task..."
             value={newTask}
             onChange={(e) => setNewTask(e.target.value)}
-            className="flex-1 border border-gray-300 rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 border border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <button
             onClick={addTask}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-7 py-3 rounded-lg transition duration-300 shadow-lg"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-7 py-3 rounded-lg shadow-lg transition"
           >
             ➕ Add
           </button>
