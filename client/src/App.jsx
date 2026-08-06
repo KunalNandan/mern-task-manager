@@ -6,6 +6,11 @@ function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("all");
 
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
+  const [editedTitle, setEditedTitle] = useState("");
+
   useEffect(() => {
     const fetchTasks = async () => {
       try {
@@ -115,6 +120,38 @@ function App() {
     (task) => !task.completed
   ).length;
 
+  const updateTask = async () => {
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/tasks/${editingTask._id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: editedTitle,
+          }),
+        }
+      );
+
+      const updatedTask = await response.json();
+
+      setTasks(
+        tasks.map((task) =>
+          task._id === updatedTask._id ? updatedTask : task
+        )
+      );
+
+      setIsModalOpen(false);
+      setEditingTask(null);
+      setEditedTitle("");
+
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex justify-center p-10">
       <div className="w-full max-w-3xl bg-white rounded-xl shadow-lg p-6">
@@ -205,8 +242,8 @@ function App() {
           <button
             onClick={() => setFilter("completed")}
             className={`px-4 py-2 rounded-lg transition ${filter === "completed"
-                ? "bg-green-600 text-white"
-                : "bg-gray-200 hover:bg-gray-300"
+              ? "bg-green-600 text-white"
+              : "bg-gray-200 hover:bg-gray-300"
               }`}
           >
             Completed
@@ -231,12 +268,59 @@ function App() {
               {task.completed ? "Mark Pending" : "Mark Complete"}
             </button>
 
+            <button
+              onClick={() => {
+                setEditingTask(task);
+                setEditedTitle(task.title);
+                setIsModalOpen(true);
+              }}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
+            >
+              ✏️ Edit
+            </button>
+
             <button onClick={() => deleteTask(task._id)}>
               Delete
             </button>
           </div>
         ))}
       </div>
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-xl shadow-xl w-96">
+
+            <h2 className="text-2xl font-bold mb-4">
+              ✏️ Edit Task
+            </h2>
+
+            <input
+              type="text"
+              value={editedTitle}
+              onChange={(e) => setEditedTitle(e.target.value)}
+              className="w-full border rounded-lg px-4 py-2"
+            />
+
+            <div className="flex justify-end gap-3 mt-6">
+
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="bg-gray-400 text-white px-4 py-2 rounded-lg"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={updateTask}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+              >
+                Save
+              </button>
+
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 

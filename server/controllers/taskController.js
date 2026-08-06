@@ -52,9 +52,9 @@ const updateTask = async (req, res) => {
     const updatedTask = await Task.findByIdAndUpdate(
       req.params.id,
       {
-        completed: req.body.completed,
+        ...req.body,
       },
-      { new: true }
+      { new: true, runValidators: true }
     );
 
     if (!updatedTask) {
