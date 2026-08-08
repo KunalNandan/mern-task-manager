@@ -1,15 +1,26 @@
 import { useEffect, useState } from "react";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import Header from "./components/Header";
+import Dashboard from "./components/Dashboard";
+import AddTaskForm from "./components/AddTaskForm";
+import TaskCard from "./components/TaskCard";
 
 function App() {
+  const [dueDate, setDueDate] = useState("");
+  const [priority, setPriority] = useState("Medium");
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("all");
 
 
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [editedTitle, setEditedTitle] = useState("");
+
+
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -36,13 +47,18 @@ function App() {
         },
         body: JSON.stringify({
           title: newTask,
-        }),
+          dueDate,
+          priority,
+        })
       });
 
       const savedTask = await response.json();
 
       setTasks([...tasks, savedTask]);
+      setDueDate("");
+      setPriority("Medium");
       setNewTask("");
+      toast.success("Task added successfully!");
     } catch (error) {
       console.error(error);
     }
@@ -50,6 +66,10 @@ function App() {
 
 
   const deleteTask = async (id) => {
+
+    if (!window.confirm("Are you sure you want to delete this task?")) {
+      return;
+    }
     try {
       const response = await fetch(
         `http://localhost:5000/api/tasks/${id}`,
@@ -60,6 +80,7 @@ function App() {
 
       if (response.ok) {
         setTasks(tasks.filter((task) => task._id !== id));
+        toast.success("Task deleted!");
       }
     } catch (error) {
       console.error(error);
@@ -87,6 +108,12 @@ function App() {
         tasks.map((task) =>
           task._id === id ? updatedTask : task
         )
+      );
+
+      toast.success(
+        currentStatus
+          ? "Task marked as pending!"
+          : "Task completed!"
       );
     } catch (error) {
       console.error(error);
@@ -146,66 +173,61 @@ function App() {
       setIsModalOpen(false);
       setEditingTask(null);
       setEditedTitle("");
+      toast.success("Task updated!");
 
     } catch (error) {
       console.error(error);
     }
   };
 
+  const completionPercentage =
+    totalTasks === 0
+      ? 0
+      : Math.round((completedTasks / totalTasks) * 100);
+
+  const sortedTasks = [...filteredTasks].sort((a, b) => {
+    // Completed tasks go to the bottom
+    if (a.completed !== b.completed) {
+      return a.completed ? 1 : -1;
+    }
+
+    // Priority order
+    const priorityOrder = {
+      High: 1,
+      Medium: 2,
+      Low: 3,
+    };
+
+    if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
+      return priorityOrder[a.priority] - priorityOrder[b.priority];
+    }
+
+    // Due date
+    return new Date(a.dueDate) - new Date(b.dueDate);
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex justify-center p-10">
-      <div className="w-full max-w-3xl bg-white rounded-xl shadow-lg p-6">
-        <div className="text-center mb-8">
-          <div className="text-6xl mb-3">📋</div>
+      <div className="w-full max-w-7xl mx-auto p-8">
+        <Header />
 
-          <h1 className="text-4xl font-extrabold text-gray-800">
-            Task Manager
-          </h1>
+        <Dashboard
+          totalTasks={totalTasks}
+          completedTasks={completedTasks}
+          pendingTasks={pendingTasks}
+          completionPercentage={completionPercentage}
+        />
 
-          <p className="text-gray-500 mt-2">
-            Stay organized. Stay productive.
-          </p>
-        </div>
+        <AddTaskForm
+          newTask={newTask}
+          setNewTask={setNewTask}
+          dueDate={dueDate}
+          setDueDate={setDueDate}
+          priority={priority}
+          setPriority={setPriority}
+          addTask={addTask}
+        />
 
-        <div className="flex gap-3 mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-
-            <div className="bg-blue-100 rounded-xl p-4 text-center shadow hover:scale-105 transition duration-300">
-              <h2 className="text-2xl font-bold text-blue-700">
-                {totalTasks}
-              </h2>
-              <p className="text-gray-700">📋 Total Tasks</p>
-            </div>
-
-            <div className="bg-green-100 rounded-xl p-4 text-center shadow hover:scale-105 transition duration-300">
-              <h2 className="text-2xl font-bold text-green-700">
-                {completedTasks}
-              </h2>
-              <p className="text-gray-700">✅ Completed</p>
-            </div>
-
-            <div className="bg-yellow-100 rounded-xl p-4 text-center shadow hover:scale-105 transition duration-300">
-              <h2 className="text-2xl font-bold text-yellow-700">
-                {pendingTasks}
-              </h2>
-              <p className="text-gray-700">⏳ Pending</p>
-            </div>
-
-          </div>
-          <input
-            type="text"
-            placeholder="Enter a task..."
-            value={newTask}
-            onChange={(e) => setNewTask(e.target.value)}
-            className="flex-1 border border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            onClick={addTask}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-7 py-3 rounded-lg shadow-lg transition"
-          >
-            ➕ Add
-          </button>
-        </div>
 
         <div className="mt-4">
           <input
@@ -251,38 +273,16 @@ function App() {
 
         </div>
 
-        {filteredTasks.map((task) => (
-          <div
+        {sortedTasks.map((task) => (
+          <TaskCard
             key={task._id}
-            className="bg-gray-50 border rounded-xl p-4 shadow-sm hover:shadow-md transition mt-4 flex justify-between items-center"
-          >
-            <h3>{task.title}</h3>
-
-            <p>
-              Status: {task.completed ? "✅ Completed" : "❌ Pending"}
-            </p>
-
-            <button
-              onClick={() => toggleComplete(task._id, task.completed)}
-            >
-              {task.completed ? "Mark Pending" : "Mark Complete"}
-            </button>
-
-            <button
-              onClick={() => {
-                setEditingTask(task);
-                setEditedTitle(task.title);
-                setIsModalOpen(true);
-              }}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
-            >
-              ✏️ Edit
-            </button>
-
-            <button onClick={() => deleteTask(task._id)}>
-              Delete
-            </button>
-          </div>
+            task={task}
+            toggleComplete={toggleComplete}
+            deleteTask={deleteTask}
+            setEditingTask={setEditingTask}
+            setEditedTitle={setEditedTitle}
+            setIsModalOpen={setIsModalOpen}
+          />
         ))}
       </div>
       {isModalOpen && (
@@ -321,6 +321,8 @@ function App() {
           </div>
         </div>
       )}
+
+      <ToastContainer position="top-right" autoClose={2000} />
     </div>
   );
 

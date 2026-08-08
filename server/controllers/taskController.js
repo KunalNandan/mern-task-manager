@@ -13,14 +13,21 @@ const getTasks = async (req, res) => {
 // CREATE a new task
 const createTask = async (req, res) => {
   try {
+    console.log("Request Body:", req.body);
+
     const task = new Task({
       title: req.body.title,
+      dueDate: req.body.dueDate,
+      priority: req.body.priority,
     });
+
+    console.log("Task Before Save:", task);
 
     const savedTask = await task.save();
 
     res.status(201).json(savedTask);
   } catch (error) {
+    console.log(error);
     res.status(400).json({ message: error.message });
   }
 };

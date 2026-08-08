@@ -18,21 +18,9 @@ app.get("/", (req, res) => {
   res.send("Backend is working!");
 });
 
-app.get("/api/tasks", (req, res) => {
-  res.json([
-    {
-      id: 1,
-      title: "Learn React",
-      completed: false,
-    },
-    {
-      id: 2,
-      title: "Build Task Manager",
-      completed: true,
-    },
-  ]);
-});
+
 
 app.listen(5000, () => {
   console.log("Server running on http://localhost:5000");
 });
+
