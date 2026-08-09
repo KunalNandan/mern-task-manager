@@ -3,7 +3,9 @@ const Task = require("../models/Task");
 // GET all tasks
 const getTasks = async (req, res) => {
   try {
-    const tasks = await Task.find();
+    const tasks = await Task.find({
+      userId: req.userId,
+    });
     res.json(tasks);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -19,6 +21,8 @@ const createTask = async (req, res) => {
       title: req.body.title,
       dueDate: req.body.dueDate,
       priority: req.body.priority,
+      category: req.body.category,
+      userId: req.userId,
     });
 
     console.log("Task Before Save:", task);
@@ -35,7 +39,10 @@ const createTask = async (req, res) => {
 // DELETE a task
 const deleteTask = async (req, res) => {
   try {
-    const deletedTask = await Task.findByIdAndDelete(req.params.id);
+    const deletedTask = await Task.findOneAndDelete({
+      _id: req.params.id,
+      userId: req.userId,
+    });
 
     if (!deletedTask) {
       return res.status(404).json({
@@ -56,12 +63,24 @@ const deleteTask = async (req, res) => {
 // UPDATE task completion
 const updateTask = async (req, res) => {
   try {
-    const updatedTask = await Task.findByIdAndUpdate(
-      req.params.id,
+    const updatedTask = await Task.findOneAndUpdate(
       {
-        ...req.body,
+        _id: req.params.id,
+        userId: req.userId,
       },
-      { new: true, runValidators: true }
+      {
+        $set: {
+          title: req.body.title,
+          dueDate: req.body.dueDate,
+          priority: req.body.priority,
+          category: req.body.category,
+          completed: req.body.completed,
+        },
+      },
+      {
+        returnDocument: "after",
+        runValidators: true,
+      }
     );
 
     if (!updatedTask) {

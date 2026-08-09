@@ -5,14 +5,26 @@ import Header from "./components/Header";
 import Dashboard from "./components/Dashboard";
 import AddTaskForm from "./components/AddTaskForm";
 import TaskCard from "./components/TaskCard";
+import CalendarView from "./components/CalendarView";
+import Login from "./components/Login";
+import Register from "./components/Register";
+import UserMenu from "./components/UserMenu";
 
 function App() {
   const [dueDate, setDueDate] = useState("");
   const [priority, setPriority] = useState("Medium");
+  const [category, setCategory] = useState("Personal");
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+
+  const [user, setUser] = useState(
+    JSON.parse(localStorage.getItem("user")) || null
+  );
+
+  const [showRegister, setShowRegister] = useState(false);
 
 
 
@@ -23,18 +35,41 @@ function App() {
 
 
   useEffect(() => {
+    if (!user) {
+      setTasks([]);
+      return;
+    }
+
     const fetchTasks = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/tasks");
+        const token = localStorage.getItem("token");
+
+        const response = await fetch(
+          "http://localhost:5000/api/tasks",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
         const data = await response.json();
-        setTasks(data);
+
+        if (!response.ok) {
+          console.error("Failed to fetch tasks:", data);
+          setTasks([]);
+          return;
+        }
+
+        setTasks(Array.isArray(data) ? data : []);
       } catch (error) {
-        console.error(error);
+        console.error("Error fetching tasks:", error);
+        setTasks([]);
       }
     };
 
     fetchTasks();
-  }, []);
+  }, [user]);
 
   const addTask = async () => {
     if (newTask.trim() === "") return;
@@ -44,11 +79,13 @@ function App() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
           title: newTask,
           dueDate,
           priority,
+          category,
         })
       });
 
@@ -57,6 +94,7 @@ function App() {
       setTasks([...tasks, savedTask]);
       setDueDate("");
       setPriority("Medium");
+      setCategory("Personal");
       setNewTask("");
       toast.success("Task added successfully!");
     } catch (error) {
@@ -66,35 +104,49 @@ function App() {
 
 
   const deleteTask = async (id) => {
-
     if (!window.confirm("Are you sure you want to delete this task?")) {
       return;
     }
+
     try {
       const response = await fetch(
         `http://localhost:5000/api/tasks/${id}`,
         {
           method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         }
       );
 
-      if (response.ok) {
-        setTasks(tasks.filter((task) => task._id !== id));
-        toast.success("Task deleted!");
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("Failed to delete task:", data);
+        toast.error(data.message || "Failed to delete task");
+        return;
       }
+
+      setTasks(tasks.filter((task) => task._id !== id));
+
+      toast.success("Task deleted!");
     } catch (error) {
-      console.error(error);
+      console.error("Error deleting task:", error);
+      toast.error("Unable to delete task");
     }
   };
 
   const toggleComplete = async (id, currentStatus) => {
     try {
+      const token = localStorage.getItem("token");
+
       const response = await fetch(
         `http://localhost:5000/api/tasks/${id}`,
         {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             completed: !currentStatus,
@@ -103,6 +155,12 @@ function App() {
       );
 
       const updatedTask = await response.json();
+
+      if (!response.ok) {
+        console.error("Failed to update task:", updatedTask);
+        toast.error(updatedTask.message || "Failed to update task");
+        return;
+      }
 
       setTasks(
         tasks.map((task) =>
@@ -116,28 +174,40 @@ function App() {
           : "Task completed!"
       );
     } catch (error) {
-      console.error(error);
+      console.error("Error updating task:", error);
+      toast.error("Unable to update task");
     }
-
-
   };
   const filteredTasks = tasks.filter((task) => {
     const matchesSearch = task.title
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
 
-    if (filter === "completed") {
-      return matchesSearch && task.completed;
-    }
+    const matchesStatus =
+      filter === "all" ||
+      (filter === "completed" && task.completed) ||
+      (filter === "pending" && !task.completed);
 
-    if (filter === "pending") {
-      return matchesSearch && !task.completed;
-    }
+    const matchesCategory =
+      categoryFilter === "all" ||
+      task.category === categoryFilter;
 
-    return matchesSearch;
+    return matchesSearch && matchesStatus && matchesCategory;
   });
 
   const totalTasks = tasks.length;
+
+  const workTasks = tasks.filter(
+    (task) => task.category === "Work"
+  ).length;
+
+  const studyTasks = tasks.filter(
+    (task) => task.category === "Study"
+  ).length;
+
+  const personalTasks = tasks.filter(
+    (task) => task.category === "Personal"
+  ).length;
 
   const completedTasks = tasks.filter(
     (task) => task.completed
@@ -155,14 +225,24 @@ function App() {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
           body: JSON.stringify({
             title: editedTitle,
+            priority: editingTask.priority,
+            category: editingTask.category,
+            dueDate: editingTask.dueDate,
           }),
         }
       );
 
       const updatedTask = await response.json();
+
+      if (!response.ok) {
+        console.error("Failed to update task:", updatedTask);
+        toast.error(updatedTask.message || "Failed to update task");
+        return;
+      }
 
       setTasks(
         tasks.map((task) =>
@@ -173,10 +253,11 @@ function App() {
       setIsModalOpen(false);
       setEditingTask(null);
       setEditedTitle("");
-      toast.success("Task updated!");
 
+      toast.success("Task updated successfully!");
     } catch (error) {
-      console.error(error);
+      console.error("Error updating task:", error);
+      toast.error("Unable to update task");
     }
   };
 
@@ -206,16 +287,51 @@ function App() {
     return new Date(a.dueDate) - new Date(b.dueDate);
   });
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex justify-center p-10">
-      <div className="w-full max-w-7xl mx-auto p-8">
-        <Header />
+  if (!user) {
+    return showRegister ? (
+      <Register
+        onRegister={() => setShowRegister(false)}
+        onShowLogin={() => setShowRegister(false)}
+      />
+    ) : (
+      <Login
+        onLogin={(loggedInUser) => setUser(loggedInUser)}
+        onShowRegister={() => setShowRegister(true)}
+      />
+    );
+  }
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
+  };
+
+  return (
+
+
+
+
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex justify-center p-3 sm:p-6 lg:p-10">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <Header />
+        <div className="flex justify-end mb-4">
+          <UserMenu
+            user={user}
+            onLogout={handleLogout}
+            onProfileUpdate={(updatedUser) => {
+              setUser(updatedUser);
+            }}
+          />
+        </div>
         <Dashboard
           totalTasks={totalTasks}
           completedTasks={completedTasks}
           pendingTasks={pendingTasks}
           completionPercentage={completionPercentage}
+          workTasks={workTasks}
+          studyTasks={studyTasks}
+          personalTasks={personalTasks}
         />
 
         <AddTaskForm
@@ -225,9 +341,19 @@ function App() {
           setDueDate={setDueDate}
           priority={priority}
           setPriority={setPriority}
+          category={category}
+          setCategory={setCategory}
           addTask={addTask}
         />
 
+        <CalendarView
+          tasks={tasks}
+          setEditingTask={setEditingTask}
+          setEditedTitle={setEditedTitle}
+          setIsModalOpen={setIsModalOpen}
+          toggleComplete={toggleComplete}
+          deleteTask={deleteTask}
+        />
 
         <div className="mt-4">
           <input
@@ -239,10 +365,14 @@ function App() {
           />
         </div>
 
-        <div className="flex gap-3 mt-4">
+        {/* Status Filters */}
+        <div className="flex flex-wrap gap-3 mt-6">
 
           <button
-            onClick={() => setFilter("all")}
+            onClick={() => {
+              setFilter("all");
+              setCategoryFilter("all");
+            }}
             className={`px-4 py-2 rounded-lg transition ${filter === "all"
               ? "bg-blue-600 text-white"
               : "bg-gray-200 hover:bg-gray-300"
@@ -273,6 +403,45 @@ function App() {
 
         </div>
 
+        {/* Category Filters */}
+        <p className="text-sm font-semibold text-gray-500 mt-5 mb-2">
+          Filter by Category
+        </p>
+
+        <div className="flex flex-wrap gap-3">
+
+          <button
+            onClick={() => setCategoryFilter("Work")}
+            className={`px-4 py-2 rounded-lg transition ${categoryFilter === "Work"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-200 hover:bg-gray-300"
+              }`}
+          >
+            💼 Work
+          </button>
+
+          <button
+            onClick={() => setCategoryFilter("Study")}
+            className={`px-4 py-2 rounded-lg transition ${categoryFilter === "Study"
+              ? "bg-purple-600 text-white"
+              : "bg-gray-200 hover:bg-gray-300"
+              }`}
+          >
+            📘 Study
+          </button>
+
+          <button
+            onClick={() => setCategoryFilter("Personal")}
+            className={`px-4 py-2 rounded-lg transition ${categoryFilter === "Personal"
+              ? "bg-green-600 text-white"
+              : "bg-gray-200 hover:bg-gray-300"
+              }`}
+          >
+            🏠 Personal
+          </button>
+
+        </div>
+
         {sortedTasks.map((task) => (
           <TaskCard
             key={task._id}
@@ -298,6 +467,52 @@ function App() {
               value={editedTitle}
               onChange={(e) => setEditedTitle(e.target.value)}
               className="w-full border rounded-lg px-4 py-2"
+            />
+
+            <select
+              value={editingTask?.priority || "Medium"}
+              onChange={(e) =>
+                setEditingTask({
+                  ...editingTask,
+                  priority: e.target.value,
+                })
+              }
+              className="w-full border rounded-lg px-4 py-2 mt-3"
+            >
+              <option value="High">🔴 High</option>
+              <option value="Medium">🟡 Medium</option>
+              <option value="Low">🟢 Low</option>
+            </select>
+
+            <select
+              value={editingTask?.category || "Personal"}
+              onChange={(e) =>
+                setEditingTask({
+                  ...editingTask,
+                  category: e.target.value,
+                })
+              }
+              className="w-full border rounded-lg px-4 py-2 mt-3"
+            >
+              <option value="Work">💼 Work</option>
+              <option value="Study">📘 Study</option>
+              <option value="Personal">🏠 Personal</option>
+            </select>
+
+            <input
+              type="date"
+              value={
+                editingTask?.dueDate
+                  ? new Date(editingTask.dueDate).toISOString().split("T")[0]
+                  : ""
+              }
+              onChange={(e) =>
+                setEditingTask({
+                  ...editingTask,
+                  dueDate: e.target.value,
+                })
+              }
+              className="w-full border rounded-lg px-4 py-2 mt-3"
             />
 
             <div className="flex justify-end gap-3 mt-6">

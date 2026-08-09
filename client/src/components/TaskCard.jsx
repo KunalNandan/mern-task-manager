@@ -24,6 +24,8 @@ function TaskCard({
 
                     <div className="flex gap-3 mt-4 flex-wrap">
 
+
+
                         <span
                             className={`px-3 py-1 rounded-full text-sm font-semibold ${task.priority === "High"
                                 ? "bg-red-100 text-red-700"
@@ -33,6 +35,23 @@ function TaskCard({
                                 }`}
                         >
                             {task.priority}
+                        </span>
+
+
+
+                        <span
+                            className={`px-3 py-1 rounded-full text-sm font-semibold ${task.category === "Work"
+                                ? "bg-blue-100 text-blue-700"
+                                : task.category === "Study"
+                                    ? "bg-purple-100 text-purple-700"
+                                    : "bg-gray-100 text-gray-700"
+                                }`}
+                        >
+                            {task.category === "Work"
+                                ? "💼 Work"
+                                : task.category === "Study"
+                                    ? "📘 Study"
+                                    : "🏠 Personal"}
                         </span>
 
                         <span
@@ -65,13 +84,13 @@ function TaskCard({
 
             </div>
 
-            <div className="flex gap-3 mt-6">
+            <div className="flex flex-col sm:flex-row gap-3 mt-6">
 
                 <button
                     onClick={() => toggleComplete(task._id, task.completed)}
                     className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 rounded-xl"
                 >
-                    ✓ Complete
+                    {task.completed ? "↩ Mark Pending" : "✓ Complete"}
                 </button>
 
                 <button

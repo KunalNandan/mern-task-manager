@@ -21,6 +21,16 @@ const taskSchema = new mongoose.Schema({
     enum: ["High", "Medium", "Low"],
     default: "Medium",
   },
+  category: {
+    type: String,
+    enum: ["Work", "Study", "Personal"],
+    default: "Personal",
+  },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
 });
 
 module.exports = mongoose.model("Task", taskSchema);
