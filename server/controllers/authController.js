@@ -151,10 +151,178 @@ const updateProfile = async (req, res) => {
     }
 };
 
+// CHANGE PASSWORD
+const changePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        // Check required fields
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({
+                message: "Current password and new password are required",
+            });
+        }
+
+        // Find logged-in user
+        const user = await User.findById(req.userId);
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found",
+            });
+        }
+
+        // Check current password
+        const isPasswordCorrect = await bcrypt.compare(
+            currentPassword,
+            user.password
+        );
+
+        if (!isPasswordCorrect) {
+            return res.status(401).json({
+                message: "Current password is incorrect",
+            });
+        }
+
+        // Make sure new password is different
+        if (currentPassword === newPassword) {
+            return res.status(400).json({
+                message: "New password must be different from current password",
+            });
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Save new password
+        user.password = hashedPassword;
+        await user.save();
+
+        res.json({
+            message: "Password changed successfully",
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+// FORGOT PASSWORD
+const forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                message: "Email is required",
+            });
+        }
+
+        const user = await User.findOne({
+            email: email.toLowerCase().trim(),
+        });
+
+        // Don't reveal whether an email exists
+        if (!user) {
+            return res.json({
+                message: "If the email exists, a password reset link will be sent",
+            });
+        }
+
+        // Create secure random token
+        const crypto = require("crypto");
+
+        const resetToken = crypto.randomBytes(32).toString("hex");
+
+        // Store hashed token in database
+        const hashedToken = crypto
+            .createHash("sha256")
+            .update(resetToken)
+            .digest("hex");
+
+        user.resetPasswordToken = hashedToken;
+
+        // Token expires in 15 minutes
+        user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
+
+        await user.save();
+
+        // For development, return the reset token
+        // We will replace this with email sending later.
+        res.json({
+            message: "Password reset token generated",
+            resetToken,
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+// RESET PASSWORD
+const resetPassword = async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        if (!token || !newPassword) {
+            return res.status(400).json({
+                message: "Token and new password are required",
+            });
+        }
+
+        // Hash the token received from the user
+        const crypto = require("crypto");
+
+        const hashedToken = crypto
+            .createHash("sha256")
+            .update(token)
+            .digest("hex");
+
+        // Find user with valid, non-expired token
+        const user = await User.findOne({
+            resetPasswordToken: hashedToken,
+            resetPasswordExpires: { $gt: Date.now() },
+        });
+
+        if (!user) {
+            return res.status(400).json({
+                message: "Invalid or expired reset token",
+            });
+        }
+
+        // Hash the new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        user.password = hashedPassword;
+
+        // Invalidate the reset token
+        user.resetPasswordToken = null;
+        user.resetPasswordExpires = null;
+
+        await user.save();
+
+        res.json({
+            message: "Password reset successfully",
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
 
 module.exports = {
     registerUser,
     loginUser,
     getProfile,
     updateProfile,
+    changePassword,
+    forgotPassword,
+    resetPassword,
 };
