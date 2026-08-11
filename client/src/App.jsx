@@ -9,6 +9,7 @@ import CalendarView from "./components/CalendarView";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import UserMenu from "./components/UserMenu";
+import ResetPassword from "./components/ResetPassword";
 
 function App() {
   const [dueDate, setDueDate] = useState("");
@@ -26,6 +27,11 @@ function App() {
 
   const [showRegister, setShowRegister] = useState(false);
 
+  const resetTokenFromUrl = window.location.pathname.startsWith(
+    "/reset-password/"
+  )
+    ? window.location.pathname.split("/reset-password/")[1]
+    : null;
 
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -287,6 +293,21 @@ function App() {
     return new Date(a.dueDate) - new Date(b.dueDate);
   });
 
+  if (resetTokenFromUrl) {
+    return (
+      <ResetPassword
+        token={resetTokenFromUrl}
+        onBackToLogin={() => {
+          window.history.replaceState({}, "", "/");
+
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+
+          setUser(null);
+        }}
+      />
+    );
+  }
   if (!user) {
     return showRegister ? (
       <Register

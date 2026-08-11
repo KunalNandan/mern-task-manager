@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const sendEmail = require("../utils/sendEmail");
 
 // REGISTER
 const registerUser = async (req, res) => {
@@ -251,9 +252,46 @@ const forgotPassword = async (req, res) => {
 
         // For development, return the reset token
         // We will replace this with email sending later.
+        const resetLink = `http://localhost:5173/reset-password/${resetToken}`;
+
+        await sendEmail(
+            user.email,
+            "Task Manager - Reset Your Password",
+            `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto;">
+                    <h2>🔐 Reset Your Task Manager Password</h2>
+        
+                    <p>You requested to reset your password.</p>
+        
+                    <p>Click the button below to create a new password:</p>
+        
+                    <a
+                        href="${resetLink}"
+                        style="
+                            display: inline-block;
+                            padding: 12px 20px;
+                            background: #2563eb;
+                            color: white;
+                            text-decoration: none;
+                            border-radius: 8px;
+                        "
+                    >
+                        Reset Password
+                    </a>
+        
+                    <p style="margin-top: 20px;">
+                        This link will expire in 15 minutes.
+                    </p>
+        
+                    <p>
+                        If you didn't request this, you can safely ignore this email.
+                    </p>
+                </div>
+            `
+        );
+
         res.json({
-            message: "Password reset token generated",
-            resetToken,
+            message: "If the email exists, a password reset link has been sent",
         });
 
     } catch (error) {

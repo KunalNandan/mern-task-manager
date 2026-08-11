@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const taskRoutes = require("./routes/taskRoutes");
@@ -19,6 +21,8 @@ mongoose
 app.get("/", (req, res) => {
   res.send("Backend is working!");
 });
+
+const sendEmail = require("./utils/sendEmail");
 
 
 
