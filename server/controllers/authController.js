@@ -312,6 +312,12 @@ const resetPassword = async (req, res) => {
             });
         }
 
+        if (newPassword.length < 8) {
+            return res.status(400).json({
+                message: "New password must be at least 8 characters",
+            });
+        }
+
         // Hash the token received from the user
         const crypto = require("crypto");
 

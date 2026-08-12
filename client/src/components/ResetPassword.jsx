@@ -5,6 +5,35 @@ function ResetPassword({ token, onBackToLogin }) {
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    const [passwordStrength, setPasswordStrength] = useState("");
+
+    const checkPasswordStrength = (password) => {
+        if (!password) {
+            setPasswordStrength("");
+            return;
+        }
+
+        const hasUppercase = /[A-Z]/.test(password);
+        const hasNumber = /[0-9]/.test(password);
+        const hasSpecialChar = /[^A-Za-z0-9]/.test(password);
+
+        if (password.length < 6) {
+            setPasswordStrength("Weak");
+        } else if (
+            password.length >= 8 &&
+            hasUppercase &&
+            hasNumber &&
+            hasSpecialChar
+        ) {
+            setPasswordStrength("Strong");
+        } else {
+            setPasswordStrength("Medium");
+        }
+    };
+
     const handleResetPassword = async (e) => {
         e.preventDefault();
 
@@ -88,25 +117,76 @@ function ResetPassword({ token, onBackToLogin }) {
                     className="space-y-4"
                 >
 
-                    <input
-                        type="password"
-                        placeholder="New Password"
-                        value={newPassword}
-                        onChange={(e) =>
-                            setNewPassword(e.target.value)
-                        }
-                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                    <div className="relative">
+                        <input
+                            type={showNewPassword ? "text" : "password"}
+                            placeholder="New Password"
+                            value={newPassword}
+                            onChange={(e) => {
+                                setNewPassword(e.target.value);
+                                checkPasswordStrength(e.target.value);
+                            }}
+                            className="w-full border border-gray-300 rounded-lg px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
 
-                    <input
-                        type="password"
-                        placeholder="Confirm New Password"
-                        value={confirmPassword}
-                        onChange={(e) =>
-                            setConfirmPassword(e.target.value)
-                        }
-                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setShowNewPassword(!showNewPassword)
+                            }
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600"
+                        >
+                            {showNewPassword ? "🙈" : "👁️"}
+                        </button>
+                    </div>
+
+                    {passwordStrength && (
+                        <p
+                            className={`text-sm font-semibold ${passwordStrength === "Weak"
+                                ? "text-red-500"
+                                : passwordStrength === "Medium"
+                                    ? "text-yellow-500"
+                                    : "text-green-600"
+                                }`}
+                        >
+                            Password strength: {passwordStrength}
+                        </p>
+                    )}
+
+                    <div className="relative">
+                        <input
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder="Confirm New Password"
+                            value={confirmPassword}
+                            onChange={(e) =>
+                                setConfirmPassword(e.target.value)
+                            }
+                            className="w-full border border-gray-300 rounded-lg px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+
+                        <button
+                            type="button"
+                            onClick={() =>
+                                setShowConfirmPassword(!showConfirmPassword)
+                            }
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600"
+                        >
+                            {showConfirmPassword ? "🙈" : "👁️"}
+                        </button>
+                    </div>
+
+                    {confirmPassword && (
+                        <p
+                            className={`text-sm font-semibold ${newPassword === confirmPassword
+                                    ? "text-green-600"
+                                    : "text-red-500"
+                                }`}
+                        >
+                            {newPassword === confirmPassword
+                                ? "✓ Passwords match"
+                                : "✗ Passwords do not match"}
+                        </p>
+                    )}
 
                     <button
                         type="submit"
