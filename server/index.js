@@ -14,9 +14,9 @@ app.use("/api/tasks", taskRoutes);
 app.use("/api/auth", authRoutes);
 
 mongoose
-  .connect("mongodb://127.0.0.1:27017/taskmanager")
-  .then(() => console.log("✅ MongoDB Connected"))
-  .catch((err) => console.log(err));
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ MongoDB Atlas Connected"))
+  .catch((err) => console.log("❌ MongoDB Connection Error:", err));
 
 app.get("/", (req, res) => {
   res.send("Backend is working!");

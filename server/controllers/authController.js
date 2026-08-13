@@ -75,6 +75,7 @@ const loginUser = async (req, res) => {
         const token = jwt.sign(
             {
                 userId: user._id,
+                tokenVersion: user.tokenVersion,
             },
             process.env.JWT_SECRET || "development-secret",
             {
@@ -197,6 +198,10 @@ const changePassword = async (req, res) => {
 
         // Save new password
         user.password = hashedPassword;
+
+        // Invalidate all existing JWT sessions
+        user.tokenVersion += 1;
+
         await user.save();
 
         res.json({

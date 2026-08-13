@@ -54,7 +54,7 @@ function ResetPassword({ token, onBackToLogin }) {
 
         try {
             const response = await fetch(
-                "http://localhost:5000/api/auth/reset-password",
+                `${import.meta.env.VITE_API_URL}/api/auth/reset-password`,
                 {
                     method: "POST",
                     headers: {
@@ -178,8 +178,8 @@ function ResetPassword({ token, onBackToLogin }) {
                     {confirmPassword && (
                         <p
                             className={`text-sm font-semibold ${newPassword === confirmPassword
-                                    ? "text-green-600"
-                                    : "text-red-500"
+                                ? "text-green-600"
+                                : "text-red-500"
                                 }`}
                         >
                             {newPassword === confirmPassword

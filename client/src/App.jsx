@@ -27,6 +27,15 @@ function App() {
 
   const [showRegister, setShowRegister] = useState(false);
 
+  const handleSessionExpired = (message) => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    setUser(null);
+
+    toast.error(message || "Session expired. Please login again.");
+  };
+
   const resetTokenFromUrl = window.location.pathname.startsWith(
     "/reset-password/"
   )
@@ -51,7 +60,7 @@ function App() {
         const token = localStorage.getItem("token");
 
         const response = await fetch(
-          "http://localhost:5000/api/tasks",
+          `${import.meta.env.VITE_API_URL}/api/tasks`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -60,6 +69,11 @@ function App() {
         );
 
         const data = await response.json();
+
+        if (response.status === 401) {
+          handleSessionExpired(data.message);
+          return;
+        }
 
         if (!response.ok) {
           console.error("Failed to fetch tasks:", data);
@@ -81,7 +95,7 @@ function App() {
     if (newTask.trim() === "") return;
 
     try {
-      const response = await fetch("http://localhost:5000/api/tasks", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/tasks`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -92,19 +106,35 @@ function App() {
           dueDate,
           priority,
           category,
-        })
+        }),
       });
 
-      const savedTask = await response.json();
+      const data = await response.json();
 
-      setTasks([...tasks, savedTask]);
+      // Session expired
+      if (response.status === 401) {
+        handleSessionExpired(data.message);
+        return;
+      }
+
+      // Other API errors
+      if (!response.ok) {
+        toast.error(data.message || "Failed to add task");
+        return;
+      }
+
+      // Task successfully created
+      setTasks([...tasks, data]);
       setDueDate("");
       setPriority("Medium");
       setCategory("Personal");
       setNewTask("");
+
       toast.success("Task added successfully!");
+
     } catch (error) {
       console.error(error);
+      toast.error("Unable to connect to server");
     }
   };
 
@@ -126,6 +156,11 @@ function App() {
       );
 
       const data = await response.json();
+
+      if (response.status === 401) {
+        handleSessionExpired(data.message);
+        return;
+      }
 
       if (!response.ok) {
         console.error("Failed to delete task:", data);
@@ -161,6 +196,11 @@ function App() {
       );
 
       const updatedTask = await response.json();
+
+      if (response.status === 401) {
+        handleSessionExpired(updatedTask.message);
+        return;
+      }
 
       if (!response.ok) {
         console.error("Failed to update task:", updatedTask);
@@ -243,6 +283,11 @@ function App() {
       );
 
       const updatedTask = await response.json();
+
+      if (response.status === 401) {
+        handleSessionExpired(updatedTask.message);
+        return;
+      }
 
       if (!response.ok) {
         console.error("Failed to update task:", updatedTask);

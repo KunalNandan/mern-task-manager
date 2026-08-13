@@ -27,7 +27,7 @@ function UserMenu({ user, onLogout, onProfileUpdate }) {
             const token = localStorage.getItem("token");
 
             const response = await fetch(
-                "http://localhost:5000/api/auth/profile",
+                `${import.meta.env.VITE_API_URL}/api/auth/profile`,
                 {
                     method: "PUT",
                     headers: {
@@ -104,7 +104,7 @@ function UserMenu({ user, onLogout, onProfileUpdate }) {
             const token = localStorage.getItem("token");
 
             const response = await fetch(
-                "http://localhost:5000/api/auth/change-password",
+                `${import.meta.env.VITE_API_URL}/api/auth/change-password`,
                 {
                     method: "PUT",
                     headers: {
@@ -256,8 +256,8 @@ function UserMenu({ user, onLogout, onProfileUpdate }) {
                             {confirmPassword && (
                                 <p
                                     className={`text-sm font-semibold mb-3 ${newPassword === confirmPassword
-                                            ? "text-green-600"
-                                            : "text-red-500"
+                                        ? "text-green-600"
+                                        : "text-red-500"
                                         }`}
                                 >
                                     {newPassword === confirmPassword
