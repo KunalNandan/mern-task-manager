@@ -4,8 +4,7 @@ A full-stack task management application built with the MERN stack, featuring se
 
 ## 🌐 Live Demo
 
-https://mern-task-manager-seven-mu.vercel.app
-
+[🚀 Open Live Application](https://mern-task-manager-seven-mu.vercel.app)
 ## ✨ Features
 
 - 🔐 User registration and login
