@@ -146,7 +146,7 @@ function App() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/tasks/${id}`,
+        `${import.meta.env.VITE_API_URL}/api/tasks/${id}`,
         {
           method: "DELETE",
           headers: {
@@ -182,7 +182,7 @@ function App() {
       const token = localStorage.getItem("token");
 
       const response = await fetch(
-        `http://localhost:5000/api/tasks/${id}`,
+        `${import.meta.env.VITE_API_URL}/api/tasks/${id}`,
         {
           method: "PATCH",
           headers: {
@@ -266,7 +266,7 @@ function App() {
   const updateTask = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/tasks/${editingTask._id}`,
+        `${import.meta.env.VITE_API_URL}/api/tasks/${editingTask._id}`,
         {
           method: "PATCH",
           headers: {
